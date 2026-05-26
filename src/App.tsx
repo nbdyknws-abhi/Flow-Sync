@@ -13,12 +13,8 @@ import {
   X,
   ChevronDown,
   Lock,
-  Settings,
   Layers,
-  MessageSquare,
-  CheckCircle2,
   Workflow,
-  TrendingUp
 } from 'lucide-react'
 
 
@@ -39,6 +35,8 @@ interface Task {
 export default function App() {
   // Navigation Mobile Drawer State
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  // Announcement bar dismiss state
+  const [announcementVisible, setAnnouncementVisible] = useState(true)
 
   // Dashboard Mockup State
   const [activeDashboardTab, setActiveDashboardTab] = useState<'tasks' | 'analytics' | 'automations'>('tasks')
@@ -79,72 +77,6 @@ export default function App() {
     }
   ])
 
-  // Move task to another column helper
-  const moveTask = (id: string, targetColumn: 'todo' | 'progress' | 'done') => {
-    setTasks(prev => prev.map(t => {
-      if (t.id === id) {
-        return {
-          ...t,
-          column: targetColumn,
-          completed: targetColumn === 'done'
-        }
-      }
-      return t
-    }))
-  }
-
-  // Toggle task complete status helper
-  const toggleTaskComplete = (id: string) => {
-    setTasks(prev => prev.map(t => {
-      if (t.id === id) {
-        const nextCompleted = !t.completed
-        return {
-          ...t,
-          completed: nextCompleted,
-          column: nextCompleted ? 'done' as const : 'progress' as const
-        }
-      }
-      return t
-    }))
-  }
-
-  // 2. Interactive Analytics State
-  const [analyticsTimeframe, setAnalyticsTimeframe] = useState<'7d' | '30d' | '90d'>('30d')
-
-  const chartData = {
-    '7d': [
-      { day: 'Mon', tasks: 12, height: 'h-1/4' },
-      { day: 'Tue', tasks: 19, height: 'h-2/5' },
-      { day: 'Wed', tasks: 25, height: 'h-1/2' },
-      { day: 'Thu', tasks: 32, height: 'h-2/3' },
-      { day: 'Fri', tasks: 38, height: 'h-4/5' },
-      { day: 'Sat', tasks: 15, height: 'h-1/3' },
-      { day: 'Sun', tasks: 22, height: 'h-2/5' }
-    ],
-    '30d': [
-      { day: 'Wk 1', tasks: 92, height: 'h-2/5' },
-      { day: 'Wk 2', tasks: 140, height: 'h-3/5' },
-      { day: 'Wk 3', tasks: 180, height: 'h-4/5' },
-      { day: 'Wk 4', tasks: 240, height: 'h-full' }
-    ],
-    '90d': [
-      { day: 'Mar', tasks: 480, height: 'h-1/2' },
-      { day: 'Apr', tasks: 620, height: 'h-2/3' },
-      { day: 'May', tasks: 790, height: 'h-5/6' },
-      { day: 'Jun', tasks: 950, height: 'h-full' }
-    ]
-  }
-
-  // 3. Interactive Automations State
-  const [automations, setAutomations] = useState([
-    { id: 'auto-1', name: 'Sync linear to slack logs', trigger: 'Linear Issue Created', action: 'Slack Message to #eng', active: true },
-    { id: 'auto-2', name: 'Auto-assign security reviews', trigger: 'PR includes "auth"', action: 'Assign Sec-Team', active: true },
-    { id: 'auto-3', name: 'Invoice sync to CRM ledger', trigger: 'Stripe Charge Paid', action: 'Sync Ledger Row', active: false }
-  ])
-
-  const toggleAutomation = (id: string) => {
-    setAutomations(prev => prev.map(a => a.id === id ? { ...a, active: !a.active } : a))
-  }
 
   // Pricing Toggle State
   const [billingInterval, setBillingInterval] = useState<'monthly' | 'annually'>('annually')
@@ -207,17 +139,21 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col antialiased bg-textured">
-
       {/* 1. ANNOUNCEMENT BAR */}
-      <div className="w-full bg-slate-900 px-4 py-2 sm:py-2.5 text-center text-xs sm:text-sm font-medium text-slate-100 flex flex-wrap items-center justify-center gap-x-2 gap-y-1.5 border-b border-slate-800 leading-tight">
-        <span className="inline-flex items-center gap-1 rounded bg-indigo-500/20 px-2 py-0.5 text-xs text-indigo-300 font-semibold uppercase tracking-wider">
-          New
-        </span>
-        <span>FlowSync 2.0: Instant Linear & Slack bidirectional syncing is live.</span>
-        <a href="#features" className="underline hover:text-indigo-200 transition-colors inline-flex items-center gap-0.5">
-          See features <ArrowRight className="w-3.5 h-3.5" />
-        </a>
-      </div>
+      {announcementVisible && (
+        <div className="w-full bg-slate-900 px-4 py-2 text-center text-xs font-medium text-slate-100 flex items-center justify-center gap-x-2 border-b border-slate-800">
+          <span className="inline-flex items-center gap-1 rounded bg-indigo-500/20 px-2 py-0.5 text-[10px] font-semibold text-indigo-300 uppercase tracking-wider shrink-0">New</span>
+          <span className="truncate">FlowSync 2.0: Linear &amp; Slack bidirectional syncing is live.</span>
+          <a href="#features" className="underline hover:text-indigo-200 transition-colors shrink-0 hidden sm:inline">See features</a>
+          <button
+            onClick={() => setAnnouncementVisible(false)}
+            aria-label="Dismiss announcement"
+            className="ml-auto shrink-0 text-slate-400 hover:text-white transition-colors p-0.5"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* 2. NAVBAR */}
       <header className="sticky top-0 z-50 w-full border-b border-slate-200/60 glass transition-all">
@@ -331,7 +267,7 @@ export default function App() {
       </header>
 
       {/* 3. HERO SECTION */}
-      <section className="relative overflow-hidden pt-12 pb-20 md:pt-20 md:pb-28 lg:pt-28">
+      <section className="relative overflow-hidden pt-10 pb-16 sm:pt-12 sm:pb-20 md:pt-20 md:pb-28 lg:pt-28">
         {/* Subtle decorative mesh gradients background */}
         <div className="absolute top-[-300px] left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-gradient-to-br from-indigo-100/40 via-violet-50/10 to-indigo-150/15 rounded-full blur-[120px] pointer-events-none z-0" />
 
@@ -344,18 +280,15 @@ export default function App() {
           </div>
 
           {/* Heading */}
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.08] max-w-4xl mx-auto mb-6">
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.1] max-w-4xl mx-auto mb-6">
             Coordinate Team Workflow <br className="hidden sm:inline" />
             <span className="text-gradient">Without The Chaos.</span>
           </h1>
 
           {/* Subheading */}
-          <p className="text-lg sm:text-xl text-slate-800 max-w-2xl mx-auto mb-10 leading-relaxed">
+          <p className="text-base sm:text-xl text-slate-800 max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed">
             FlowSync coordinates your daily tasks, automates native tool integrations, and aligns your engineers, designers, and managers—in one incredibly fast, intuitive dashboard.
           </p>
-
-          {/* Hero Illustration */}
-
 
         {/* Hero Form CTAs */}
         <div className="max-w-md mx-auto mb-12">
@@ -410,456 +343,109 @@ export default function App() {
         </div>
 
         {/* 4. INTERACTIVE DASHBOARD PREVIEW */}
-        <div className="relative max-w-5xl mx-auto z-20 mt-6 select-none">
-          {/* Soft decorative shadow under mockup */}
+        <div className="relative max-w-5xl mx-auto z-20 mt-6 select-none hidden md:block">
           <div className="absolute inset-x-12 bottom-0 top-12 bg-indigo-500/10 rounded-[2.5rem] filter blur-3xl pointer-events-none" />
-
-          {/* High-Fidelity Mockup Container */}
           <div className="relative border border-slate-200/90 rounded-2xl bg-slate-900 shadow-2xl overflow-hidden text-left flex flex-col min-h-[500px]">
-
-
-            {/* Fake Chrome window dots and controls */}
             <div className="flex items-center justify-between px-4 py-3 bg-slate-950 border-b border-slate-800">
-              <div className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded-full bg-red-500/95 block" />
-                <span className="w-3 h-3 rounded-full bg-yellow-500/95 block" />
-                <span className="w-3 h-3 rounded-full bg-green-500/95 block" />
-                <span className="text-xs text-slate-500 font-semibold ml-4 font-mono">flowsync-app.internal/workspace/Q3-roadmap</span>
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="w-3 h-3 rounded-full bg-red-500/95 block shrink-0" />
+                <span className="w-3 h-3 rounded-full bg-yellow-500/95 block shrink-0" />
+                <span className="w-3 h-3 rounded-full bg-green-500/95 block shrink-0" />
+                <span className="text-xs text-slate-500 font-semibold ml-3 font-mono truncate">flowsync-app/Q3-roadmap</span>
               </div>
-
-              {/* Visual pulses indicating active sync */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success-500 opacity-75" />
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-success-500" />
                 </span>
-                <span className="text-xs font-semibold text-success-500 uppercase tracking-widest font-mono">Live System Active</span>
+                <span className="text-xs font-semibold text-success-500 uppercase tracking-widest font-mono">Live</span>
               </div>
             </div>
-
-            {/* Internal Mockup Dashboard layout */}
-            <div className="flex flex-grow flex-col md:flex-row bg-[#0b0f19]">
-
-              {/* Sidebar Navigation */}
-              <aside className="w-full md:w-56 bg-slate-950 border-r border-slate-900 p-4 flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-x-visible">
-
-                {/* Workspace title & selector */}
-                <div className="hidden md:flex items-center justify-between mb-6 px-1">
+            <div className="flex flex-grow bg-[#0b0f19]">
+              <aside className="w-56 bg-slate-950 border-r border-slate-900 p-4 flex flex-col gap-2">
+                <div className="flex items-center justify-between mb-6 px-1">
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded bg-indigo-600 flex items-center justify-center text-[10px] text-white font-bold">FS</div>
                     <span className="text-sm font-bold text-slate-200">FlowSync Corp</span>
                   </div>
                   <ChevronDown className="w-4 h-4 text-slate-500" />
                 </div>
-
-                {/* Sidebar Nav Interactive Items */}
                 <button
                   onClick={() => setActiveDashboardTab('tasks')}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-semibold tracking-wide transition-all text-left whitespace-nowrap ${activeDashboardTab === 'tasks'
-                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-900/30'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
-                    }`}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-semibold tracking-wide transition-all ${activeDashboardTab === 'tasks' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
                 >
                   <Layers className="w-4 h-4" />
                   <span>Tasks & Board</span>
                 </button>
-
                 <button
                   onClick={() => setActiveDashboardTab('analytics')}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-semibold tracking-wide transition-all text-left whitespace-nowrap ${activeDashboardTab === 'analytics'
-                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-900/30'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
-                    }`}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-semibold tracking-wide transition-all ${activeDashboardTab === 'analytics' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
                 >
                   <BarChart3 className="w-4 h-4" />
                   <span>Team Velocity</span>
                 </button>
-
                 <button
                   onClick={() => setActiveDashboardTab('automations')}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-semibold tracking-wide transition-all text-left whitespace-nowrap ${activeDashboardTab === 'automations'
-                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-900/30'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
-                    }`}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-semibold tracking-wide transition-all ${activeDashboardTab === 'automations' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
                 >
                   <Zap className="w-4 h-4" />
                   <span>Automations</span>
-                  <span className="hidden md:inline ml-auto rounded bg-success-500/10 px-1.5 py-0.5 text-[9px] font-bold text-success-500 border border-success-500/20">3 Active</span>
                 </button>
-
-                {/* Sidebar Bottom Metadata */}
-                <div className="hidden md:flex flex-col gap-3 mt-auto border-t border-slate-900 pt-4 px-1 text-slate-400 text-[11px]">
-                  <div className="flex items-center gap-2 text-slate-400 font-semibold">
-                    <Settings className="w-3.5 h-3.5" />
-                    <span>Settings & Access</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Lock className="w-3.5 h-3.5" />
-                    <span>128-bit Encrypted</span>
-                  </div>
-                </div>
               </aside>
-
-              {/* Dashboard Main Workspace Window */}
-              <main className="flex-grow p-4 sm:p-6 bg-[#0b0f19] text-slate-300 flex flex-col gap-6 overflow-y-auto">
-
-                {/* Dynamic Tab 1: KANBAN TASK BOARD */}
+              <main className="flex-grow p-6 bg-[#0b0f19] text-slate-300">
                 {activeDashboardTab === 'tasks' && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex flex-col gap-4 h-full"
-                  >
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
-                      <div>
-                        <h3 className="text-base sm:text-lg font-bold text-slate-100 flex items-center gap-2">
-                          <span>Q3 Launch Sync-Board</span>
-                          <span className="rounded bg-indigo-500/15 px-2 py-0.5 text-[10px] font-bold text-indigo-400 border border-indigo-500/20">Roadmap</span>
-                        </h3>
-                        <p className="text-xs text-slate-400 mt-0.5">Click actions to dynamically move tasks across sprint lists.</p>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <div className="flex -space-x-1.5">
-                          {tasks.map(t => (
-                            <img key={t.id} src={t.assignee.avatar} alt={t.assignee.name} className="w-5 h-5 rounded-full border border-slate-900" />
-                          ))}
-                        </div>
-                        <span className="text-xs font-semibold text-slate-400">4 contributors live</span>
-                      </div>
-                    </div>
-
-                    {/* Columns grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-                      {/* Column: To Do */}
-                      <div className="bg-slate-950/70 border border-slate-900 rounded-xl p-3 flex flex-col gap-2 min-h-[250px]">
-                        <div className="flex items-center justify-between text-xs text-slate-300 font-bold px-1 mb-1">
-                          <span>TO DO</span>
-                          <span className="rounded bg-slate-900 px-1.5 py-0.5 text-[10px] text-slate-400">{tasks.filter(t => t.column === 'todo').length}</span>
-                        </div>
-
-                        <div className="flex flex-col gap-2">
-                          {tasks.filter(t => t.column === 'todo').map(t => (
-                            <div key={t.id} className="bg-slate-900 border border-slate-800/80 rounded-lg p-3 shadow-sm hover:border-slate-700/80 transition-colors">
-                              <div className="flex items-start justify-between gap-2 mb-2">
-                                <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded tracking-wide ${t.priority === 'high' ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
-                                  }`}>
-                                  {t.priority}
-                                </span>
-                                <img src={t.assignee.avatar} alt={t.assignee.name} className="w-5 h-5 rounded-full" />
-                              </div>
-                              <h4 className="text-xs font-semibold text-slate-200 leading-snug">{t.title}</h4>
-                              <div className="flex items-center justify-between border-t border-slate-800/60 pt-2 mt-3.5">
-                                <button onClick={() => toggleTaskComplete(t.id)} className="text-[10px] text-slate-450 hover:text-indigo-400 flex items-center gap-1 font-semibold">
-                                  <Check className="w-3 h-3" /> Complete
-                                </button>
-                                <button onClick={() => moveTask(t.id, 'progress')} className="text-[10px] text-indigo-400 hover:text-indigo-300 font-bold flex items-center gap-0.5">
-                                  <span>Start task</span> <ArrowRight className="w-3 h-3" />
-                                </button>
-                              </div>
-                            </div>
-                          ))}
-                          {tasks.filter(t => t.column === 'todo').length === 0 && (
-                            <div className="text-center py-8 text-xs text-slate-500 italic">No tasks in backlog</div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Column: In Progress */}
-                      <div className="bg-slate-950/70 border border-slate-900 rounded-xl p-3 flex flex-col gap-2 min-h-[250px]">
-                        <div className="flex items-center justify-between text-xs text-slate-300 font-bold px-1 mb-1">
-                          <span className="flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 block animate-pulse" />
-                            <span>IN PROGRESS</span>
-                          </span>
-                          <span className="rounded bg-indigo-950 px-1.5 py-0.5 text-[10px] text-indigo-400">{tasks.filter(t => t.column === 'progress').length}</span>
-                        </div>
-
-                        <div className="flex flex-col gap-2">
-                          {tasks.filter(t => t.column === 'progress').map(t => (
-                            <div key={t.id} className="bg-slate-900 border border-indigo-900/40 rounded-lg p-3 shadow-md shadow-indigo-950/20 hover:border-indigo-800/80 transition-colors">
-                              <div className="flex items-start justify-between gap-2 mb-2">
-                                <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded tracking-wide ${t.priority === 'high' ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
-                                  }`}>
-                                  {t.priority}
-                                </span>
-                                <img src={t.assignee.avatar} alt={t.assignee.name} className="w-5 h-5 rounded-full" />
-                              </div>
-                              <h4 className="text-xs font-semibold text-slate-100 leading-snug">{t.title}</h4>
-                              <div className="flex items-center justify-between border-t border-slate-800/60 pt-2 mt-3.5">
-                                <button onClick={() => moveTask(t.id, 'todo')} className="text-[10px] text-slate-450 hover:text-slate-300 font-semibold">
-                                  Move back
-                                </button>
-                                <button onClick={() => toggleTaskComplete(t.id)} className="text-[10px] text-success-500 hover:text-emerald-400 font-bold flex items-center gap-1">
-                                  <Check className="w-3.5 h-3.5 stroke-[2.5]" /> Mark done
-                                </button>
-                              </div>
-                            </div>
-                          ))}
-                          {tasks.filter(t => t.column === 'progress').length === 0 && (
-                            <div className="text-center py-10 text-xs text-slate-600 border border-dashed border-slate-800 rounded-lg italic">
-                              Click 'Start task' on to-do list items to pull them in.
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Column: Done */}
-                      <div className="bg-slate-950/70 border border-slate-900 rounded-xl p-3 flex flex-col gap-2 min-h-[250px]">
-                        <div className="flex items-center justify-between text-xs text-slate-300 font-bold px-1 mb-1">
-                          <span className="flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-success-500 block" />
-                            <span>COMPLETED</span>
-                          </span>
-                          <span className="rounded bg-success-950 px-1.5 py-0.5 text-[10px] text-success-500">{tasks.filter(t => t.column === 'done').length}</span>
-                        </div>
-
-                        <div className="flex flex-col gap-2">
-                          {tasks.filter(t => t.column === 'done').map(t => (
-                            <div key={t.id} className="bg-slate-900/60 border border-slate-850 rounded-lg p-3 opacity-85 relative overflow-hidden">
-                              <div className="absolute right-2 top-2">
-                                <CheckCircle2 className="w-4 h-4 text-success-500/70" />
-                              </div>
-                              <div className="flex items-start justify-between gap-2 mb-2">
-                                <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded tracking-wide bg-slate-850 text-slate-400">
-                                  {t.priority}
-                                </span>
-                                <img src={t.assignee.avatar} alt={t.assignee.name} className="w-5 h-5 rounded-full" />
-                              </div>
-                              <h4 className="text-xs font-semibold text-slate-350 line-through leading-snug">{t.title}</h4>
-                              <div className="flex items-center justify-between border-t border-slate-800/40 pt-2 mt-3.5">
-                                <button onClick={() => moveTask(t.id, 'progress')} className="text-[10px] text-indigo-400 hover:underline">
-                                  Re-open task
-                                </button>
-                                <span className="text-[9px] text-slate-400 font-mono">Sync completed</span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                    </div>
-                  </motion.div>
+                   <div className="grid grid-cols-3 gap-4">
+                     {/* Column Renderings */}
+                     <div className="bg-slate-950/70 border border-slate-900 rounded-xl p-3 flex flex-col gap-2">
+                       <span className="text-[10px] font-bold text-slate-400">TO DO</span>
+                       {tasks.filter(t => t.column === 'todo').map(t => (
+                         <div key={t.id} className="bg-slate-900 p-3 rounded text-xs">{t.title}</div>
+                       ))}
+                     </div>
+                     <div className="bg-slate-950/70 border border-slate-900 rounded-xl p-3 flex flex-col gap-2">
+                       <span className="text-[10px] font-bold text-indigo-400">IN PROGRESS</span>
+                       {tasks.filter(t => t.column === 'progress').map(t => (
+                         <div key={t.id} className="bg-slate-900 p-3 rounded text-xs">{t.title}</div>
+                       ))}
+                     </div>
+                     <div className="bg-slate-950/70 border border-slate-900 rounded-xl p-3 flex flex-col gap-2">
+                       <span className="text-[10px] font-bold text-success-500">DONE</span>
+                       {tasks.filter(t => t.column === 'done').map(t => (
+                         <div key={t.id} className="bg-slate-900 p-3 rounded text-xs">{t.title}</div>
+                       ))}
+                     </div>
+                   </div>
                 )}
-
-                {/* Dynamic Tab 2: TEAM VELOCITY ANALYTICS */}
-                {activeDashboardTab === 'analytics' && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex flex-col gap-4 h-full"
-                  >
-                    <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                      <div>
-                        <h3 className="text-base sm:text-lg font-bold text-slate-100 flex items-center gap-2">
-                          <TrendingUp className="w-5 h-5 text-indigo-500" />
-                          <span>Velocity Analytics</span>
-                        </h3>
-                        <p className="text-xs text-slate-400 mt-0.5">Toggle filters to watch data heights adjust dynamically.</p>
-                      </div>
-
-                      {/* Interactive Filter Pills */}
-                      <div className="flex bg-slate-950 p-1 rounded-lg border border-slate-900">
-                        {(['7d', '30d', '90d'] as const).map(tf => (
-                          <button
-                            key={tf}
-                            onClick={() => setAnalyticsTimeframe(tf)}
-                            className={`px-2.5 py-1 rounded text-xs font-bold uppercase transition-all ${analyticsTimeframe === tf
-                              ? 'bg-indigo-600 text-white shadow-sm'
-                              : 'text-slate-400 hover:text-slate-200'
-                              }`}
-                          >
-                            {tf}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Analytics Dashboard Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {/* Visual Metric Card 1 */}
-                      <div className="bg-slate-950 border border-slate-900 rounded-xl p-4 flex flex-col gap-1">
-                        <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Sprint Lead Time</span>
-                        <span className="text-2xl font-black text-slate-100 tracking-tight font-sans">2.4 Days</span>
-                        <span className="text-[11px] text-success-500 font-bold flex items-center gap-0.5 mt-1">
-                          <TrendingUp className="w-3.5 h-3.5" /> -42% faster than Q2
-                        </span>
-                      </div>
-
-                      {/* Visual Metric Card 2 */}
-                      <div className="bg-slate-950 border border-slate-900 rounded-xl p-4 flex flex-col gap-1">
-                        <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Automations run</span>
-                        <span className="text-2xl font-black text-slate-100 tracking-tight font-sans">18,421</span>
-                        <span className="text-[11px] text-success-500 font-bold flex items-center gap-0.5 mt-1">
-                          <TrendingUp className="w-3.5 h-3.5" /> 99.98% successful syncs
-                        </span>
-                      </div>
-
-                      {/* Visual Metric Card 3 */}
-                      <div className="bg-slate-950 border border-slate-900 rounded-xl p-4 flex flex-col gap-1">
-                        <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Team capacity score</span>
-                        <span className="text-2xl font-black text-slate-100 tracking-tight font-sans">94.8%</span>
-                        <span className="text-[11px] text-indigo-400 font-bold flex items-center gap-0.5 mt-1">
-                          <CheckCircle2 className="w-3.5 h-3.5" /> Fully optimized
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Interactive CSS Chart */}
-                    <div className="bg-slate-950 border border-slate-900 rounded-xl p-6 flex flex-col gap-4">
-                      <div className="flex items-center justify-between text-xs text-slate-400">
-                        <span className="font-bold">Sync Resolution Rate</span>
-                        <span className="font-mono text-indigo-400">Timeframe: {analyticsTimeframe === '7d' ? 'Last 7 Days' : analyticsTimeframe === '30d' ? 'Last 4 Weeks' : 'Last Quarter'}</span>
-                      </div>
-
-                      {/* Bar Grid Visual */}
-                      <div className="h-44 flex items-end justify-around gap-2.5 sm:gap-6 border-b border-slate-800 pb-2 pt-6">
-                        {chartData[analyticsTimeframe].map((item, idx) => (
-                          <div key={idx} className="flex-grow flex flex-col items-center gap-2 h-full justify-end group cursor-pointer">
-                            {/* Hover Value Popup */}
-                            <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 border border-slate-800 text-[10px] text-indigo-300 font-bold px-2 py-1 rounded shadow-md -translate-y-1 select-none font-mono">
-                              {item.tasks} tasks
-                            </div>
-
-                            {/* The animated dynamic bar */}
-                            <motion.div
-                              initial={{ scaleY: 0 }}
-                              animate={{ scaleY: 1 }}
-                              transition={{ duration: 0.4, ease: 'easeOut' }}
-                              className={`w-full sm:w-10 rounded-t bg-gradient-to-t from-indigo-950 via-indigo-600 to-indigo-500 group-hover:from-indigo-900 group-hover:to-indigo-400 transition-all ${item.height}`}
-                            />
-                            <span className="text-[10px] font-bold text-slate-400 font-sans tracking-wide uppercase">{item.day}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Dynamic Tab 3: AUTOMATIONS LIST */}
-                {activeDashboardTab === 'automations' && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex flex-col gap-4 h-full"
-                  >
-                    <div className="border-b border-slate-800 pb-3">
-                      <h3 className="text-base sm:text-lg font-bold text-slate-100 flex items-center gap-2">
-                        <Workflow className="w-5 h-5 text-indigo-500" />
-                        <span>Smart Workflow Automations</span>
-                      </h3>
-                      <p className="text-xs text-slate-400 mt-0.5">Toggle active states on and off to observe live visual indicators.</p>
-                    </div>
-
-                    {/* Automation Workflow Visual Builder Preview */}
-                    <div className="bg-slate-950 border border-slate-900 rounded-xl p-5 flex flex-col gap-4">
-                      <div className="text-xs text-slate-400 font-bold uppercase tracking-wider">Live Execution Thread</div>
-
-                      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-slate-900 rounded-lg border border-slate-850">
-                        {/* Step 1 */}
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
-                            <CheckCircle2 className="w-4.5 h-4.5" />
-                          </div>
-                          <div>
-                            <div className="text-xs font-bold text-slate-200">Issue Solved</div>
-                            <div className="text-[10px] text-slate-400 font-mono">FlowSync Board</div>
-                          </div>
-                        </div>
-
-                        {/* Connection indicator arrow */}
-                        <div className="flex items-center gap-1.5 flex-grow justify-center px-4">
-                          <span className="h-0.5 bg-gradient-to-r from-indigo-500 to-emerald-500 flex-grow rounded block min-w-[20px] max-w-[80px]" />
-                          <Zap className="w-3.5 h-3.5 text-success-500 animate-pulse pulse-dot" />
-                          <span className="h-0.5 bg-gradient-to-r from-emerald-500 to-indigo-500 flex-grow rounded block min-w-[20px] max-w-[80px]" />
-                        </div>
-
-                        {/* Step 2 */}
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-lg bg-success-500/10 border border-success-500/30 flex items-center justify-center text-success-400">
-                            <MessageSquare className="w-4.5 h-4.5" />
-                          </div>
-                          <div>
-                            <div className="text-xs font-bold text-slate-200">Slack Dispatch</div>
-                            <div className="text-[10px] text-slate-400 font-mono">#eng-deployment</div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Automations Toggle List */}
-                    <div className="flex flex-col gap-2">
-                      {automations.map(auto => (
-                        <div key={auto.id} className="bg-slate-950 border border-slate-900/80 rounded-xl p-4 flex items-center justify-between gap-4">
-                          <div className="flex items-start gap-3">
-                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${auto.active ? 'bg-indigo-600/10 border border-indigo-600/20 text-indigo-400' : 'bg-slate-900 border border-slate-850 text-slate-400'}`}>
-                              <Zap className="w-4 h-4" />
-                            </div>
-                            <div>
-                              <h4 className="text-xs sm:text-sm font-bold text-slate-200">{auto.name}</h4>
-                              <p className="text-[10px] sm:text-xs text-slate-400 mt-0.5">
-                                Trigger: <span className="font-mono text-indigo-300 font-semibold">{auto.trigger}</span> → <span className="font-mono text-indigo-300 font-semibold">{auto.action}</span>
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Custom Toggle Switch */}
-                          <button
-                            onClick={() => toggleAutomation(auto.id)}
-                            className={`w-10 h-6 rounded-full p-1 transition-all ${auto.active ? 'bg-indigo-600 shadow-inner' : 'bg-slate-900 border border-slate-800'
-                              }`}
-                            aria-label={`Toggle ${auto.name}`}
-                          >
-                            <div className={`w-4 h-4 rounded-full bg-white transition-all shadow-sm ${auto.active ? 'translate-x-4' : 'translate-x-0'
-                              }`} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-
               </main>
             </div>
-
           </div>
-
         </div>
 
-        {/* 5. TRUST LOGOS STRIP */}
+        {/* MOBILE DASHBOARD PREVIEW */}
+        <div className="md:hidden relative max-w-md mx-auto z-20 mt-8 select-none px-4">
+          <div className="rounded-2xl bg-slate-900 border border-slate-700/60 shadow-2xl p-4">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-xs font-bold text-slate-200">Q3 Launch Board</span>
+              <span className="text-[10px] bg-indigo-900 text-indigo-300 px-2 py-0.5 rounded">Live</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="bg-slate-950 p-3 rounded-lg text-center"><div className="text-lg font-black text-slate-200">1</div><div className="text-[9px] uppercase text-slate-500">Todo</div></div>
+              <div className="bg-slate-950 p-3 rounded-lg text-center"><div className="text-lg font-black text-indigo-400">2</div><div className="text-[9px] uppercase text-slate-500">Doing</div></div>
+              <div className="bg-slate-950 p-3 rounded-lg text-center"><div className="text-lg font-black text-emerald-400">1</div><div className="text-[9px] uppercase text-slate-500">Done</div></div>
+            </div>
+          </div>
+        </div>
+
         <div className="mt-20 md:mt-24 relative z-10">
           <p className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-600 mb-8">
             TRUSTED BY HIGH-GROWTH STARTUPS WORLDWIDE
           </p>
-
-          {/* Grayscale Client Logos */}
           <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-6 opacity-85">
-
-            {/* Stripe */}
-            <span className="h-6 flex items-center text-slate-500 hover:text-slate-900 transition-colors font-black tracking-tight text-lg sm:text-xl font-sans cursor-default select-none">
-              stripe
-            </span>
-
-            {/* Linear */}
-            <span className="h-6 flex items-center text-slate-500 hover:text-slate-900 transition-colors font-extrabold tracking-tight text-lg sm:text-xl font-sans cursor-default select-none">
-              L I N E A R
-            </span>
-
-            {/* Notion */}
-            <span className="h-6 flex items-center text-slate-500 hover:text-slate-900 transition-colors font-bold tracking-tight text-lg sm:text-xl font-sans cursor-default select-none">
-              N o t i o n
-            </span>
-
-            {/* Slack */}
-            <span className="h-6 flex items-center text-slate-500 hover:text-slate-900 transition-colors font-black tracking-tight text-lg sm:text-xl font-sans cursor-default select-none">
-              slack
-            </span>
-
-            {/* Airbnb */}
-            <span className="h-6 flex items-center text-slate-500 hover:text-slate-900 transition-colors font-black tracking-tight text-lg sm:text-xl font-sans cursor-default select-none">
-              airbnb
-            </span>
+            <span className="text-lg sm:text-xl font-black text-slate-500">stripe</span>
+            <span className="text-lg sm:text-xl font-extrabold text-slate-500">LINEAR</span>
+            <span className="text-lg sm:text-xl font-bold text-slate-500">Notion</span>
+            <span className="text-lg sm:text-xl font-black text-slate-500">slack</span>
+            <span className="text-lg sm:text-xl font-black text-slate-500">airbnb</span>
           </div>
         </div>
 
@@ -867,7 +453,7 @@ export default function App() {
       </section>
 
     {/* 6. FEATURES SECTION (Bento Grid) */}
-    <section id="features" className="py-20 md:py-28 bg-slate-50 border-y border-slate-200/50 relative overflow-visible">
+      <section id="features" className="py-12 md:py-20 lg:py-28 bg-slate-50 border-y border-slate-200/50 relative overflow-visible">
 
       {/* Soft backlighting */}
       <div className="absolute top-[20%] right-[-10%] w-[400px] h-[400px] bg-gradient-to-br from-indigo-200/20 to-transparent rounded-full blur-[100px] pointer-events-none" />
@@ -995,7 +581,7 @@ export default function App() {
       </section>
 
     {/* 7. PRACTICAL OUTCOMES / BENEFITS SECTION */}
-    <section id="benefits" className="py-20 md:py-28 relative overflow-hidden">
+      <section id="benefits" className="py-12 md:py-20 lg:py-28 relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         <div className="text-center max-w-2xl mx-auto mb-16 md:mb-20">
@@ -1047,22 +633,22 @@ export default function App() {
 
         </div>
 
-        <div className="mt-16 md:mt-24 border border-slate-200/80 rounded-2xl bg-white shadow-premium p-8 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+        <div className="mt-16 md:mt-24 border border-slate-200/80 rounded-2xl bg-white shadow-premium p-6 sm:p-8 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 text-center">
           <div>
-            <div className="text-3xl sm:text-4xl font-extrabold text-indigo-600">65%</div>
-            <div className="text-xs sm:text-sm font-semibold text-slate-600 uppercase tracking-wider mt-1.5">Fewer Status Meetings</div>
+            <div className="text-2xl sm:text-4xl font-extrabold text-indigo-600">65%</div>
+            <div className="text-[10px] sm:text-sm font-semibold text-slate-600 uppercase tracking-wider mt-1.5">Fewer Meetings</div>
           </div>
           <div>
-            <div className="text-3xl sm:text-4xl font-extrabold text-indigo-600">3x</div>
-            <div className="text-xs sm:text-sm font-semibold text-slate-600 uppercase tracking-wider mt-1.5">Faster Deployment Cycles</div>
+            <div className="text-2xl sm:text-4xl font-extrabold text-indigo-600">3x</div>
+            <div className="text-[10px] sm:text-sm font-semibold text-slate-600 uppercase tracking-wider mt-1.5">Faster Deploys</div>
           </div>
           <div>
-            <div className="text-3xl sm:text-4xl font-extrabold text-indigo-600">99.98%</div>
-            <div className="text-xs sm:text-sm font-semibold text-slate-600 uppercase tracking-wider mt-1.5">Integration Success Rate</div>
+            <div className="text-2xl sm:text-4xl font-extrabold text-indigo-600">99.98%</div>
+            <div className="text-[10px] sm:text-sm font-semibold text-slate-600 uppercase tracking-wider mt-1.5">Success Rate</div>
           </div>
           <div>
-            <div className="text-3xl sm:text-4xl font-extrabold text-indigo-600">14 Days</div>
-            <div className="text-xs sm:text-sm font-semibold text-slate-600 uppercase tracking-wider mt-1.5">Trial Duration</div>
+            <div className="text-2xl sm:text-4xl font-extrabold text-indigo-600">14 Days</div>
+            <div className="text-[10px] sm:text-sm font-semibold text-slate-600 uppercase tracking-wider mt-1.5">Free Trial</div>
           </div>
         </div>
 
@@ -1070,7 +656,7 @@ export default function App() {
       </section>
 
     {/* 8. SOCIAL PROOF / TESTIMONIALS SECTION */}
-    <section id="testimonials" className="py-20 md:py-28 bg-slate-50 border-t border-slate-200/50 relative overflow-hidden">
+      <section id="testimonials" className="py-12 md:py-20 lg:py-28 bg-slate-50 border-t border-slate-200/50 relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         <div className="text-center max-w-2xl mx-auto mb-16">
@@ -1156,7 +742,7 @@ export default function App() {
       </section>
 
     {/* 9. PRICING PREVIEW SECTION */}
-    <section id="pricing" className="py-20 md:py-28 relative overflow-hidden bg-white">
+      <section id="pricing" className="py-12 md:py-20 lg:py-28 relative overflow-hidden bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
         <div className="text-center max-w-2xl mx-auto mb-16">
@@ -1171,79 +757,79 @@ export default function App() {
           </p>
 
           {/* Monthly / Annual billing switch toggle */}
-          <div className="flex items-center justify-center gap-3.5 mt-8">
-            <span className={`text-sm font-bold ${billingInterval === 'monthly' ? 'text-slate-900' : 'text-slate-600'}`}>Monthly</span>
-
+          <div className="flex items-center justify-center gap-3 mt-8">
             <button
+              type="button"
+              onClick={() => setBillingInterval('monthly')}
+              className={`text-sm font-bold px-3 py-1.5 rounded-lg transition-all ${billingInterval === 'monthly' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'text-slate-500 hover:text-slate-800'}`}
+            >
+              Monthly
+            </button>
+            <button
+              type="button"
               onClick={() => setBillingInterval(billingInterval === 'monthly' ? 'annually' : 'monthly')}
-              className="w-12 h-7 bg-indigo-600 rounded-full p-1 transition-colors relative flex items-center"
+              className="w-12 h-7 bg-indigo-600 rounded-full p-1 transition-colors relative flex items-center shrink-0"
               aria-label="Toggle pricing billing interval"
             >
-              <div className={`w-5 h-5 rounded-full bg-white transition-transform ${billingInterval === 'annually' ? 'translate-x-5' : 'translate-x-0'
-                }`} />
+              <div className={`w-5 h-5 rounded-full bg-white transition-transform ${billingInterval === 'annually' ? 'translate-x-5' : 'translate-x-0'}`} />
             </button>
-
-            <span className={`text-sm font-bold flex items-center gap-1.5 ${billingInterval === 'annually' ? 'text-slate-900' : 'text-slate-600'}`}>
+            <button
+              type="button"
+              onClick={() => setBillingInterval('annually')}
+              className={`text-sm font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${billingInterval === 'annually' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'text-slate-500 hover:text-slate-800'}`}
+            >
               Annually
-              <span className="inline-flex items-center rounded bg-success-500/10 px-2 py-0.5 text-xs font-black text-success-600 border border-success-500/20">
+              <span className="inline-flex items-center rounded bg-emerald-500/10 px-2 py-0.5 text-xs font-black text-emerald-600 border border-emerald-500/20">
                 Save 20%
               </span>
-            </span>
+            </button>
           </div>
         </div>
 
         {/* Pricing cards grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch max-w-5xl mx-auto">
 
           {/* Tier 1: Starter */}
           <div className="border border-slate-200/70 rounded-2xl bg-white shadow-premium p-6 sm:p-8 flex flex-col justify-between transition-all duration-300">
             <div>
               <h3 className="text-lg font-bold text-slate-900 mb-2">Starter</h3>
-              <p className="text-xs text-slate-600 mb-6">Perfect for small initial teams & creators.</p>
+              <p className="text-xs text-slate-600 mb-6">Perfect for small initial teams &amp; creators.</p>
               <div className="flex items-baseline mb-6 font-sans">
                 <span className="text-4xl font-extrabold text-slate-900">$0</span>
                 <span className="text-slate-500 text-sm font-semibold ml-1">/ forever</span>
               </div>
-
               <hr className="border-slate-100 my-6" />
-
-              {/* Features checklist */}
               <ul className="flex flex-col gap-3.5 mb-8">
-                <li className="flex items-start gap-3.5 text-sm">
+                <li className="flex items-start gap-3.5 text-sm text-slate-700">
                   <Check className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
                   <span>Up to 5 team members</span>
                 </li>
-                <li className="flex items-start gap-3.5 text-sm">
+                <li className="flex items-start gap-3.5 text-sm text-slate-700">
                   <Check className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
                   <span>Basic Kanban Sprint boards</span>
                 </li>
-                <li className="flex items-start gap-3.5 text-sm">
+                <li className="flex items-start gap-3.5 text-sm text-slate-700">
                   <Check className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
                   <span>3 basic native integrations</span>
                 </li>
-                <li className="flex items-start gap-3.5 text-sm">
+                <li className="flex items-start gap-3.5 text-sm text-slate-700">
                   <Check className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
                   <span>250 workflow automated runs/mo</span>
                 </li>
               </ul>
             </div>
-
-            <a
-              href="#cta"
-              className="w-full text-center py-3 rounded-xl border border-slate-200 hover:border-indigo-600 hover:bg-indigo-50/20 text-slate-700 hover:text-indigo-600 font-bold text-sm transition-all"
-            >
+            <a href="#cta" className="w-full text-center py-3 rounded-xl border border-slate-200 hover:border-indigo-600 hover:bg-indigo-50/20 text-slate-700 hover:text-indigo-600 font-bold text-sm transition-all block">
               Sign up free
             </a>
           </div>
 
-          {/* Tier 2: Pro (Highlighted with indigo border & glow shadow) */}
+          {/* Tier 2: Pro — highlighted */}
           <div className="relative border-2 border-indigo-600 rounded-2xl bg-white shadow-xl shadow-indigo-100/50 p-6 sm:p-8 flex flex-col justify-between transition-all duration-300">
             <div className="absolute right-6 top-0 -translate-y-1/2">
               <span className="inline-flex items-center rounded-full bg-indigo-600 px-3.5 py-1 text-xs font-black text-white uppercase tracking-wider shadow-sm">
                 Most Popular
               </span>
             </div>
-
             <div>
               <h3 className="text-lg font-bold text-slate-900 mb-2">Pro</h3>
               <p className="text-xs text-slate-600 mb-6">Designed for high-growth tech teams.</p>
@@ -1253,37 +839,31 @@ export default function App() {
                 </span>
                 <span className="text-slate-500 text-sm font-semibold ml-1">/ user / mo</span>
               </div>
-
               <hr className="border-slate-100 my-6" />
-
               <ul className="flex flex-col gap-3.5 mb-8">
                 <li className="flex items-start gap-3.5 text-sm font-semibold text-slate-950">
-                  <Check className="w-4 h-4 text-success-500 shrink-0 mt-0.5" />
+                  <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                   <span>Unlimited team members</span>
                 </li>
                 <li className="flex items-start gap-3.5 text-sm font-semibold text-slate-950">
-                  <Check className="w-4 h-4 text-success-500 shrink-0 mt-0.5" />
+                  <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                   <span>Advanced backlog, custom fields</span>
                 </li>
                 <li className="flex items-start gap-3.5 text-sm font-semibold text-slate-950">
-                  <Check className="w-4 h-4 text-success-500 shrink-0 mt-0.5" />
+                  <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                   <span>Unlimited native integrations</span>
                 </li>
                 <li className="flex items-start gap-3.5 text-sm font-semibold text-slate-950">
-                  <Check className="w-4 h-4 text-success-500 shrink-0 mt-0.5" />
+                  <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                   <span>10,000 automated runs/mo</span>
                 </li>
                 <li className="flex items-start gap-3.5 text-sm font-semibold text-slate-950">
-                  <Check className="w-4 h-4 text-success-500 shrink-0 mt-0.5" />
-                  <span>Velocity analytics & Lead Times</span>
+                  <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                  <span>Velocity analytics &amp; Lead Times</span>
                 </li>
               </ul>
             </div>
-
-            <a
-              href="#cta"
-              className="w-full text-center py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all"
-            >
+            <a href="#cta" className="w-full text-center py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all block">
               Get Started Free
             </a>
           </div>
@@ -1296,37 +876,31 @@ export default function App() {
               <div className="flex items-baseline mb-6 font-sans">
                 <span className="text-4xl font-extrabold text-slate-900">Custom</span>
               </div>
-
               <hr className="border-slate-100 my-6" />
-
               <ul className="flex flex-col gap-3.5 mb-8">
-                <li className="flex items-start gap-3.5 text-sm">
+                <li className="flex items-start gap-3.5 text-sm text-slate-700">
                   <Check className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
                   <span>Unlimited automated runs</span>
                 </li>
-                <li className="flex items-start gap-3.5 text-sm">
+                <li className="flex items-start gap-3.5 text-sm text-slate-700">
                   <Check className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
                   <span>Single Sign-On (SSO / SAML)</span>
                 </li>
-                <li className="flex items-start gap-3.5 text-sm">
+                <li className="flex items-start gap-3.5 text-sm text-slate-700">
                   <Check className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
                   <span>SOC2 certification access reports</span>
                 </li>
-                <li className="flex items-start gap-3.5 text-sm">
+                <li className="flex items-start gap-3.5 text-sm text-slate-700">
                   <Check className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
                   <span>Isolated dedicated ledgers</span>
                 </li>
-                <li className="flex items-start gap-3.5 text-sm">
+                <li className="flex items-start gap-3.5 text-sm text-slate-700">
                   <Check className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
-                  <span>Dedicated success manager & SLAs</span>
+                  <span>Dedicated success manager &amp; SLAs</span>
                 </li>
               </ul>
             </div>
-
-            <a
-              href="#cta"
-              className="w-full text-center py-3 rounded-xl border border-slate-200 hover:border-indigo-600 hover:bg-indigo-50/20 text-slate-700 hover:text-indigo-600 font-bold text-sm transition-all"
-            >
+            <a href="#cta" className="w-full text-center py-3 rounded-xl border border-slate-200 hover:border-indigo-600 hover:bg-indigo-50/20 text-slate-700 hover:text-indigo-600 font-bold text-sm transition-all block">
               Contact Sales
             </a>
           </div>
@@ -1337,7 +911,7 @@ export default function App() {
       </section>
 
     {/* 10. FAQ SECTION */}
-    <section id="faq" className="py-20 md:py-28 bg-slate-50 border-t border-slate-200/50 relative overflow-hidden">
+      <section id="faq" className="py-12 md:py-20 lg:py-28 bg-slate-50 border-t border-slate-200/50 relative overflow-hidden">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 relative z-10">
 
         <div className="text-center mb-16">
@@ -1392,14 +966,14 @@ export default function App() {
       </section>
 
     {/* 11. FINAL CTA SECTION */}
-    <section id="cta" className="py-20 md:py-28 bg-white relative overflow-hidden">
+      <section id="cta" className="py-12 md:py-20 lg:py-28 bg-white relative overflow-hidden">
 
       {/* Soft Indigo Backlight */}
       <div className="absolute inset-x-0 bottom-[-100px] w-full h-[300px] bg-gradient-to-t from-indigo-100/50 via-slate-50/10 to-transparent rounded-full blur-[100px] pointer-events-none" />
 
         <div className="max-w-5xl mx-auto px-4 sm:px-6 relative z-10">
 
-          <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 border border-slate-850 rounded-[2.5rem] p-8 sm:p-12 md:p-16 text-center text-white relative overflow-hidden shadow-2xl">
+          <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 border border-slate-850 rounded-2xl sm:rounded-[2.5rem] p-6 sm:p-12 md:p-16 text-center text-white relative overflow-hidden shadow-2xl">
 
             {/* Grid decorative backdrop pattern */}
             <div className="absolute inset-0 opacity-5 pointer-events-none bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:16px_16px]" />
