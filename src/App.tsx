@@ -42,7 +42,7 @@ export default function App() {
   const [activeDashboardTab, setActiveDashboardTab] = useState<'tasks' | 'analytics' | 'automations'>('tasks')
 
   // 1. Kanban Board State
-  const [tasks, setTasks] = useState<Task[]>([
+  const [tasks] = useState<Task[]>([
     {
       id: 'task-1',
       title: 'Redesign settings billing portal',
@@ -50,7 +50,7 @@ export default function App() {
       assignee: { name: 'Sarah L.', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&auto=format&fit=crop&q=80' },
       column: 'progress',
       completed: false
-      console.log(setTasks)
+
     },
     {
       id: 'task-2',
