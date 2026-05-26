@@ -42,7 +42,7 @@ export default function App() {
   const [activeDashboardTab, setActiveDashboardTab] = useState<'tasks' | 'analytics' | 'automations'>('tasks')
 
   // 1. Kanban Board State
-  const [tasks] = useState<Task[]>([
+  const [tasks,setTasks] = useState<Task[]>([
     {
       id: 'task-1',
       title: 'Redesign settings billing portal',
@@ -77,6 +77,7 @@ export default function App() {
       completed: true
     }
   ])
+  console.log(setTasks)
 
 
   // Pricing Toggle State
