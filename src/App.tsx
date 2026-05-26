@@ -50,6 +50,7 @@ export default function App() {
       assignee: { name: 'Sarah L.', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&auto=format&fit=crop&q=80' },
       column: 'progress',
       completed: false
+      console.log(setTasks)
     },
     {
       id: 'task-2',
